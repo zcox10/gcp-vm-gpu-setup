@@ -1,0 +1,23 @@
+gcp:
+  project_id: "zsc-personal"
+  gpu_count: 1
+  disk_source_image: "projects/ubuntu-os-accelerator-images/global/images/ubuntu-accelerator-2204-amd64-with-nvidia-570-v20250307"
+  disk_size_gb: 100
+  # vm_name: "ml-cloud-t4-gpu"
+  # gpu_type: "nvidia-tesla-t4"
+  # gpu_quota_name: "NVIDIA_T4_GPUS"
+  # machine_types: ["n1-standard-1", "n1-standard-2", "n1-standard-4", "n1-standard-8", "n1-standard-16"]
+  vm_name: "ml-cloud-l4-gpu"
+  gpu_type: "nvidia-l4"
+  gpu_quota_name: "NVIDIA_L4_GPUS"
+  machine_types: ["g2-standard-4", "g2-standard-8", "g2-standard-12", "g2-standard-16"]
+github:
+  repo_url: "git@github.com:zcox10/vector-db-rag.git"
+  username: "zcox10"
+  email: "zach.s.cox@gmail.com"
+  ssh_key_path: "~/.ssh/zsc-ssh-mac"
+ssh:
+  ssh_user: "zsc2107"
+  ssh_key_path: "~/.ssh/zsc-ssh-mac"
+pyenv:
+  python_version: "3.11.2"
