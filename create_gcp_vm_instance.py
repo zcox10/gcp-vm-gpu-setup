@@ -7,6 +7,7 @@ import time
 import logging
 import yaml
 import json
+import sys
 
 
 class AcquireGpu:
@@ -268,7 +269,8 @@ class AcquireGpu:
 
         allocated_gpu = any(zone["gpu_allocated"] is True for zone in scanned_zones)
         if not allocated_gpu:
-            logging.info("No available GPU/machine.")
+            logging.error("No available GPU/machine.")
+            sys.exit(1)
 
         return scanned_zones
 
@@ -428,7 +430,8 @@ class AcquireGpu:
         if successful_allocation:
             logging.info(f"Successfully allocated {self.gpu_type}. Total time: {total_time} sec\n")
         else:
-            logging.info(f"Could not allocate {self.gpu_type}. Total time: {total_time} sec\n")
+            logging.error(f"Could not allocate {self.gpu_type}. Total time: {total_time} sec\n")
+            sys.exit(1)
 
         return allocated_vms
 
@@ -492,7 +495,8 @@ def main() -> None:
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(message)s",
         level=logging.INFO,
-        handlers=[logging.StreamHandler()],
+        handlers=[logging.StreamHandler(sys.stdout)],
+        force=True,
     )
     logging.info("Start acquiring GPU")
 
@@ -518,7 +522,8 @@ def main() -> None:
 
     # Added a safety check so we don't index [0] if no VMs were allocated.
     if not allocated_vms:
-        logging.info("No VM allocated. Exiting without printing JSON.")
+        logging.error("No VM allocated. Exiting without printing JSON.")
+        sys.exit(1)
         return
 
     output = {
@@ -530,6 +535,7 @@ def main() -> None:
 
     # Print JSON output for external use (e.g., in a bash script)
     print(json.dumps(output))
+    sys.exit(0)
 
 
 if __name__ == "__main__":

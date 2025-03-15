@@ -45,16 +45,18 @@ command_exists() {
 create_vm_instance() {
     echo -e "\n===== Acquiring a GPU from GCP =====\n"
 
-    PYTHON_OUTPUT="$(python3 create_gcp_vm_instance.py 2>&1 || true)"
+    PYTHON_OUTPUT="$(python3 create_gcp_vm_instance.py 2>&1)"
     PYTHON_EXIT_CODE=$?
     if [[ $PYTHON_EXIT_CODE -ne 0 ]]; then
         echo -e "\n===== Error: 'create_gcp_vm_instance.py' failed with exit code $PYTHON_EXIT_CODE. ====="
         echo "Output was: $PYTHON_OUTPUT"
         exit $PYTHON_EXIT_CODE
+    else
+        echo "$PYTHON_OUTPUT"
     fi
 
     # Expect the final line of output to be JSON
-    OUTPUT="$(echo "$PYTHON_OUTPUT" | tail -n 1)"
+    OUTPUT="$(tail -n 1 <<<"$PYTHON_OUTPUT")"
 
     # Validate that OUTPUT is valid JSON
     if ! echo "$OUTPUT" | jq empty >/dev/null 2>&1; then
