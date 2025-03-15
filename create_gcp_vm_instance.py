@@ -2,7 +2,7 @@ import datetime
 import os
 from google.cloud import compute_v1
 from google.oauth2 import service_account
-from typing import List, Dict
+from typing import Union, List, Dict
 import time
 import logging
 import yaml
@@ -173,7 +173,7 @@ class AcquireGpu:
         zone,
         machine_types_client: compute_v1.MachineTypesClient,
         gpu_available: bool,
-    ) -> bool | Dict[str, str]:
+    ) -> Union[bool, Dict[str, str]]:
         """
         If a GPU is marked as available in the given zone, try to find a suitable machine type
         and create a VM instance.

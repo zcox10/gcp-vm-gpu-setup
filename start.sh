@@ -19,7 +19,6 @@
 set -Eeuo pipefail
 
 # -----------------------------------------------------------------------------
-# (CHANGES MADE):
 #   Add a helper function to verify required commands exist.
 # -----------------------------------------------------------------------------
 command_exists() {
@@ -40,12 +39,12 @@ command_exists scp
 echo -e "\n===== Acquiring a GPU from GCP =====\n"
 
 # -----------------------------------------------------------------------------
-#   Capture the Python script output and its exit code for error handling.
+# Capture the Python script output and its exit code for error handling.
 # -----------------------------------------------------------------------------
 PYTHON_OUTPUT="$(python3 create_gcp_vm_instance.py 2>&1 || true)"
 PYTHON_EXIT_CODE=$?
 if [[ $PYTHON_EXIT_CODE -ne 0 ]]; then
-    echo "\n===== Error: 'create_gcp_vm_instance.py' failed with exit code $PYTHON_EXIT_CODE. ====="
+    echo -e "\n===== Error: 'create_gcp_vm_instance.py' failed with exit code $PYTHON_EXIT_CODE. ====="
     echo "Output was: $PYTHON_OUTPUT"
     exit $PYTHON_EXIT_CODE
 fi
@@ -55,7 +54,7 @@ OUTPUT="$(echo "$PYTHON_OUTPUT" | tail -n 1)"
 
 # Validate that OUTPUT is valid JSON
 if ! echo "$OUTPUT" | jq empty >/dev/null 2>&1; then
-    echo "\n===== Error: The final line of Python output is not valid JSON. Got:"
+    echo -e "\n===== Error: The final line of Python output is not valid JSON. Got:"
     echo "$OUTPUT"
     exit 1
 fi
@@ -73,13 +72,16 @@ echo "INSTANCE_NAME: $INSTANCE_NAME"
 echo -e "EXTERNAL_IP: $EXTERNAL_IP\n"
 
 # -----------------------------------------------------------------------------
-# (CHANGES MADE):
 #   Validate that we obtained a non-empty, non-null external IP.
 # -----------------------------------------------------------------------------
 if [[ -z "$EXTERNAL_IP" || "$EXTERNAL_IP" == "null" ]]; then
     echo -e "\n===== Failed to retrieve a valid external IP =====\n"
     exit 1
 fi
+
+# TODO: debugging shortcut, comment out above
+# INSTANCE_NAME="ml-cloud-l4-gpu-2025-03-14-22-38-52"
+# EXTERNAL_IP="34.139.6.105"
 
 # -----------------------------------------------------------------------------
 # Read variables from config.yaml for SSH into VM
@@ -89,11 +91,11 @@ SSH_KEY_PATH="$(yq e '.ssh.ssh_key_path' config.yaml)"
 
 # Validate SSH config values
 if [[ -z "$SSH_USER" || "$SSH_USER" == "null" ]]; then
-    echo "\n===== Error: 'ssh.ssh_user' is missing or null in config.yaml ====="
+    echo -e "\n===== Error: 'ssh.ssh_user' is missing or null in config.yaml ====="
     exit 1
 fi
 if [[ -z "$SSH_KEY_PATH" || "$SSH_KEY_PATH" == "null" ]]; then
-    echo "\n===== Error: 'ssh.ssh_key_path' is missing or null in config.yaml ====="
+    echo -e "\n===== Error: 'ssh.ssh_key_path' is missing or null in config.yaml ====="
     exit 1
 fi
 
@@ -128,7 +130,7 @@ done
 # -----------------------------------------------------------------------------
 ssh-keygen -R "$EXTERNAL_IP" 2>/dev/null || true
 ssh-keyscan -H "$EXTERNAL_IP" >>~/.ssh/known_hosts 2>/dev/null || {
-    echo "\n===== Error: Failed to add $EXTERNAL_IP to known_hosts. ====="
+    echo -e "\n===== Error: Failed to add $EXTERNAL_IP to known_hosts. ====="
     exit 1
 }
 
@@ -139,12 +141,20 @@ ssh -i "$SSH_KEY_PATH" "$SSH_USER@$EXTERNAL_IP" "mkdir -p ~/setup_scripts"
 scp -i "$SSH_KEY_PATH" vm_setup_script.sh "$SSH_USER@$EXTERNAL_IP:~/setup_scripts/"
 
 # -----------------------------------------------------------------------------
-# Gather additional configuration values from config.yaml for the remote setup
+# Gather additional configuration values from config.yaml and .env for the remote setup
 # -----------------------------------------------------------------------------
+# Retrieve Github Personal Access token from .env
+if [ -f .env ]; then
+    set -o allexport
+    source .env
+    set +o allexport
+fi
+
+# Set varaibles
 GIT_REPO="$(yq e '.github.repo_url' config.yaml)"
 GIT_USERNAME="$(yq e '.github.username' config.yaml)"
 GIT_EMAIL="$(yq e '.github.email' config.yaml)"
-GIT_PAT="$(yq e '.github.personal_access_token' config.yaml)"
+GIT_PAT="$GITHUB_PERSONAL_ACCESS_TOKEN"
 PYENV_VERSION="$(yq e '.pyenv.python_version' config.yaml)"
 
 echo -e "\n===== Parameters ====="

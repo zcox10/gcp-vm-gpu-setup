@@ -21,7 +21,7 @@ The automation workflow is divided into three main parts:
 
 ## Configuration
 
-All the major parameters for the setup are defined in the `config.yaml` file. This modular file lets you adjust settings for GCP, GitHub, SSH, and the Python environment without modifying the scripts.
+All the major parameters for the setup are defined in the `config.yaml` file. This modular file lets you adjust settings for GCP, GitHub, SSH, and the Python environment without modifying the scripts. Additionally, in a `.env` file, set a variable named `GITHUB_PERSONAL_ACCESS_TOKEN` to add an SSH key to a GitHub account.
 
 ## Configuration Details
 
@@ -40,7 +40,6 @@ All the major parameters for the setup are defined in the `config.yaml` file. Th
   - `username`: Your GitHub username.
   - `email`: Your GitHub email.
   - `ssh_key_path`: Path to the SSH key used for GitHub access.
-  - `personal_access_token`: GitHub personal access token for API interactions (e.g., uploading SSH keys).
 
 - SSH Settings:
   - `ssh_user`: The username for SSH access on the VM.
@@ -92,6 +91,7 @@ All the major parameters for the setup are defined in the `config.yaml` file. Th
 ## Usage
 
 - **Prepare Configuration**: update the `config.yaml` file with your GCP, GitHub, SSH, and Python environment parameters.
+- **Set Access Tokens**: Set a variable named `GITHUB_PERSONAL_ACCESS_TOKEN` in a `.env` file to add an SSH key to a GitHub account.
 - **Run the Orchestration Script**: execute the `start.sh` script:
 
 ```bash
@@ -108,7 +108,8 @@ All key parameters are defined in the config.yaml file, making the setup highly 
 - **GCP Section:**
   - Adjust parameters like `project_id`, `gpu_count`, `disk_source_image`, `disk_size_gb`, `vm_name`, `gpu_type`, `gpu_quota_name`, and `machine_types` to tailor the VM provisioning.
 - **GitHub Section:**
-  - Specify the repository URL, username, email, SSH key path, and personal access token to manage repository cloning and SSH key uploads.
+  - Specify the repository URL, username, email, and SSH key path to manage repository cloning and SSH key uploads.
+  - In a `.env` file, set a variable named `GITHUB_PERSONAL_ACCESS_TOKEN` to add an SSH key to a GitHub account.
 - **SSH Section:**
   - Set the SSH username and key path for VM access.
 - **pyenv Section:**

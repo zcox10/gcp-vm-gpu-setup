@@ -16,7 +16,6 @@ github:
   username: "zcox10"
   email: "zach.s.cox@gmail.com"
   ssh_key_path: "~/.ssh/zsc-ssh-mac"
-  personal_access_token: ${GITHUB_PERSONAL_ACCESS_TOKEN}
 ssh:
   ssh_user: "zsc2107"
   ssh_key_path: "~/.ssh/zsc-ssh-mac"

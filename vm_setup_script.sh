@@ -53,7 +53,7 @@ CUDA_LD_LIBRARY_PATH="/usr/local/cuda-12.8/lib64"
 if [[ -d "$CUDA_PATH" && -x "$CUDA_PATH/nvcc" ]]; then
     echo -e "\n===== CUDA Toolkit is already installed =====\n"
     export PATH="$CUDA_PATH:$PATH"
-    export LD_LIBRARY_PATH="$CUDA_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="$CUDA_LD_LIBRARY_PATH:${LD_LIBRARY_PATH:-}"
     nvcc --version
 else
     echo -e "\n===== Installing CUDA Toolkit =====\n"
@@ -72,7 +72,7 @@ else
         echo "export LD_LIBRARY_PATH=$CUDA_LD_LIBRARY_PATH:\$LD_LIBRARY_PATH" >>~/.bashrc
     fi
     export PATH="$CUDA_PATH:$PATH"
-    export LD_LIBRARY_PATH="$CUDA_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="$CUDA_LD_LIBRARY_PATH:${LD_LIBRARY_PATH:-}"
     nvcc --version
 fi
 
@@ -142,11 +142,17 @@ if ! pgrep -x ssh-agent >/dev/null; then
     fi
 else
     echo -e "\n===== SSH agent is already running =====\n"
-    # Dynamically find the running SSH agent's socket
-    SSH_AUTH_SOCK=$(find /tmp -type s -name "agent.*" 2>/dev/null | head -n 1)
-    export SSH_AUTH_SOCK
-    if [[ -z "$SSH_AUTH_SOCK" ]]; then
-        echo -e "\n===== Warning: Unable to find a valid SSH agent socket =====\n"
+    if [[ -f "$HOME/.ssh/ssh-agent.env" ]]; then
+        # Use the previously saved environment variables
+        source "$HOME/.ssh/ssh-agent.env"
+    else
+        # Fallback: manually set SSH_AUTH_SOCK, but note SSH_AGENT_PID might be missing!
+        SSH_AUTH_SOCK=$(find /tmp -type s -name "agent.*" 2>/dev/null | head -n 1)
+        export SSH_AUTH_SOCK
+        if [[ -z "$SSH_AUTH_SOCK" ]]; then
+            echo -e "\n===== Warning: Unable to find a valid SSH agent socket =====\n"
+        fi
+        # Optionally, you might attempt to retrieve the agent PID if needed.
     fi
 fi
 
@@ -202,7 +208,7 @@ fi
 echo -e "\n===== Adding GitHub to known_hosts =====\n"
 ssh-keygen -R github.com 2>/dev/null || true
 ssh-keyscan -H github.com >>~/.ssh/known_hosts 2>/dev/null || {
-    echo "Error: Failed to add github.com to known_hosts."
+    echo -e "\n===== Error: Failed to add github.com to known_hosts ====="
     exit 1
 }
 chmod 600 ~/.ssh/known_hosts
@@ -211,7 +217,11 @@ chmod 600 ~/.ssh/known_hosts
 #   Test SSH authentication with GitHub.
 # -----------------------------------------------------------------------------
 echo -e "\n===== Testing SSH authentication with GitHub =====\n"
-if ! ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+SSH_OUTPUT=$(ssh -T git@github.com 2>&1 || true)
+echo -e "$SSH_OUTPUT"
+if echo "$SSH_OUTPUT" | grep -q "successfully authenticated"; then
+    echo -e "\n===== SSH authentication to GitHub succeeded. =====\n"
+else
     echo -e "\n===== SSH authentication to GitHub failed. Exiting. =====\n"
     exit 1
 fi
@@ -234,6 +244,7 @@ REPO_NAME=$(basename "$GIT_REPO" .git)
 if [[ ! -d "$REPO_NAME" ]]; then
     echo -e "\n===== Cloning repository: $REPO_NAME =====\n"
     git clone "$GIT_REPO"
+    cd "$REPO_NAME" || exit
     git remote set-url origin "$GIT_REPO"
 else
     echo -e "\n===== Repository $REPO_NAME already exists. Skipping clone =====\n"
@@ -280,7 +291,9 @@ fi
 # -----------------------------------------------------------------------------
 #   Install pyenv (if not already installed) and set up a virtualenv.
 # -----------------------------------------------------------------------------
-if ! command -v pyenv &>/dev/null; then
+if [ -x "$HOME/.pyenv/bin/pyenv" ]; then
+    echo -e "\n===== pyenv is already installed. Skipping installation =====\n"
+else
     echo -e "\n===== Installing pyenv dependencies =====\n"
     sudo apt-get install -y -qq make build-essential libssl-dev zlib1g-dev \
         libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
@@ -317,8 +330,6 @@ if ! command -v pyenv &>/dev/null; then
 
     cd ~/"$GIT_USERNAME"/"$REPO_NAME" || exit
     pyenv local "${REPO_NAME}-pyenv"
-else
-    echo -e "\n===== pyenv is already installed. Skipping installation =====\n"
 fi
 
 # -----------------------------------------------------------------------------
