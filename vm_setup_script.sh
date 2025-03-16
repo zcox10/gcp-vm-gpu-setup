@@ -77,7 +77,7 @@ install_cuda_toolkit() {
 
 install_git() {
     echo -e "\n===== Installing Git =====\n"
-    sudo apt-get install -y -qq git
+    sudo apt-get install -y -qq git git-lfs tmux
 }
 
 generate_ssh_key() {
