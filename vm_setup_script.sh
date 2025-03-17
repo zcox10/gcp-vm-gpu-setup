@@ -71,13 +71,22 @@ install_cuda_toolkit() {
         fi
         export PATH="$CUDA_PATH:$PATH"
         export LD_LIBRARY_PATH="$CUDA_LD_LIBRARY_PATH:${LD_LIBRARY_PATH:-}"
+
+        # Check nsights compute and nvcc versions
         nvcc --version
+        ncu --version
     fi
 }
 
+set_nsights_compute_permissions() {
+    # In order to gain access to Nsights Compute, need to run following code below, reboot required
+    echo "options nvidia NVreg_RestrictProfilingToAdminUsers=0" | sudo tee -a /etc/modprobe.d/nvidia.conf
+    sudo update-initramfs -u
+}
+
 install_git() {
-    echo -e "\n===== Installing Git =====\n"
-    sudo apt-get install -y -qq git git-lfs tmux
+    echo -e "\n===== Installing Git and Other Dependencies =====\n"
+    sudo apt-get install -y -qq git git-lfs tmux unzip
 }
 
 generate_ssh_key() {
@@ -364,6 +373,7 @@ clone_github_repo
 config_git_global_user_details
 validate_cuda
 install_pyenv
+set_nsights_compute_permissions
 teardown
 
 echo -e "\n===== Setup completed successfully! =====\n"
