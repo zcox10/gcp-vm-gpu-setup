@@ -18,6 +18,11 @@
 # -----------------------------------------------------------------------------
 set -Eeuo pipefail
 
+# Source .env file
+set -a
+[ -f .env ] && source .env
+set +a
+
 # Global Variables
 GCP_PROJECT_ID=""
 ZONE=""
