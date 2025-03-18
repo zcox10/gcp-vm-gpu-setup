@@ -81,7 +81,8 @@ install_cuda_toolkit() {
 set_nsights_compute_permissions() {
     # In order to gain access to Nsights Compute, need to run following code below, reboot required
     echo "options nvidia NVreg_RestrictProfilingToAdminUsers=0" | sudo tee -a /etc/modprobe.d/nvidia.conf
-    sudo update-initramfs -u
+    # sudo update-initramfs -u
+    # sudo reboot
 }
 
 install_git() {
@@ -347,6 +348,7 @@ teardown() {
 echo -e "\n===== Downloading CUDA Drivers ====="
 update_linux
 install_cuda_toolkit
+# set_nsights_compute_permissions
 install_git
 
 # Generate SSH key for GitHub if it doesn't exist.
@@ -373,7 +375,6 @@ clone_github_repo
 config_git_global_user_details
 validate_cuda
 install_pyenv
-set_nsights_compute_permissions
 teardown
 
 echo -e "\n===== Setup completed successfully! =====\n"
