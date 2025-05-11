@@ -332,6 +332,7 @@ install_pyenv() {
 
         cd ~/"$GIT_USERNAME"/"$REPO_NAME" || exit
         pyenv local "${REPO_NAME}-pyenv"
+        python -m pip install --upgrade pip
     fi
 }
 
